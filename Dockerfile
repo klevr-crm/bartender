@@ -1,4 +1,4 @@
-FROM php:8.3-fpm-alpine
+FROM php:8.4-fpm-alpine
 
 RUN apk add --no-cache \
     libzip-dev \
@@ -6,7 +6,8 @@ RUN apk add --no-cache \
     unzip \
     git \
     sqlite-dev \
-    && docker-php-ext-install pdo pdo_sqlite zip
+    linux-headers \
+    && docker-php-ext-install pdo pdo_sqlite zip sockets bcmath
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
