@@ -1,0 +1,76 @@
+services:
+  bartender-app:
+    build: .
+    ports:
+      - "8088:8088"
+    environment:
+      APP_ENV: local
+      APP_URL: http://localhost:8088
+      DB_CONNECTION: sqlite
+      DB_DATABASE: /app/storage/database.sqlite
+      BARTENDER_GATEWAY_URL: http://omni-gateway:3001
+      BARTENDER_INBOUND_MODE: http
+      BARTENDER_RABBITMQ_DSN: amqp://user:pass@rabbitmq:5672/
+      QUEUE_CONNECTION: redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    volumes:
+      - ./storage:/app/storage
+    networks:
+      - default
+      - rabbitmq
+      - redis
+
+  bartender-reverb:
+    build: .
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    ports:
+      - "8080:8080"
+    environment:
+      APP_ENV: local
+      DB_CONNECTION: sqlite
+      DB_DATABASE: /app/storage/database.sqlite
+      QUEUE_CONNECTION: redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    volumes:
+      - ./storage:/app/storage
+    networks:
+      - default
+      - redis
+
+  bartender-queue:
+    build: .
+    command: php artisan queue:work --sleep=3 --tries=3
+    environment:
+      APP_ENV: local
+      DB_CONNECTION: sqlite
+      DB_DATABASE: /app/storage/database.sqlite
+      QUEUE_CONNECTION: redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    volumes:
+      - ./storage:/app/storage
+    networks:
+      - default
+      - redis
+
+  bartender-consumer:
+    build: .
+    command: php artisan bartender:consume-outbound
+    environment:
+      APP_ENV: local
+      DB_CONNECTION: sqlite
+      DB_DATABASE: /app/storage/database.sqlite
+      BARTENDER_RABBITMQ_DSN: amqp://user:pass@rabbitmq:5672/
+    volumes:
+      - ./storage:/app/storage
+    networks:
+      - default
+      - rabbitmq
+
+networks:
+  rabbitmq:
+    external: true
+  redis:
+    external: true

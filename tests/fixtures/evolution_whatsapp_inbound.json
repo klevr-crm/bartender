@@ -1,0 +1,24 @@
+{
+    "event": "messages.upsert",
+    "instance": "evo_instance_1",
+    "data": {
+        "key": {
+            "remoteJid": "5511999999999@s.whatsapp.net",
+            "fromMe": false,
+            "id": "evmid.test"
+        },
+        "pushName": "Bartender User",
+        "message": {
+            "conversation": "Hello"
+        },
+        "messageType": "conversation",
+        "messageTimestamp": 1715856000,
+        "source": "web",
+        "status": "PENDING"
+    },
+    "destination": "evo_instance_1",
+    "date_time": "2024-05-16T12:00:00+00:00",
+    "sender": "5511999999999@s.whatsapp.net",
+    "server_url": "https://evolution.example.com",
+    "apikey": ""
+}
