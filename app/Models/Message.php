@@ -22,6 +22,7 @@ final class Message extends Model
         'role',
         'content',
         'media',
+        'metadata',
         'external_message_id',
         'status',
         'sent_at',
@@ -33,6 +34,7 @@ final class Message extends Model
     {
         return [
             'media' => 'array',
+            'metadata' => 'array',
             'sent_at' => 'datetime',
             'delivered_at' => 'datetime',
             'read_at' => 'datetime',

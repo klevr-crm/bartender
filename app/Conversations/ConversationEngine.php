@@ -71,11 +71,20 @@ final class ConversationEngine
 
         $turn = $this->personaRunner->nextTurn($conversation);
 
+        $metadata = [];
+        if ($turn->intent !== null) {
+            $metadata['intent'] = $turn->intent;
+        }
+        if ($turn->satisfaction !== null) {
+            $metadata['satisfaction'] = $turn->satisfaction;
+        }
+
         ($this->createMessage)([
             'conversation_id' => $conversation->id,
             'direction' => 'inbound',
             'role' => 'user',
             'content' => $turn->text,
+            'metadata' => $metadata === [] ? null : $metadata,
             'external_message_id' => 'bartender_'.uniqid(),
             'status' => 'sent',
             'sent_at' => now(),
@@ -104,7 +113,7 @@ final class ConversationEngine
         if ($turn->closeConversation) {
             $conversation->status = 'completed';
             $conversation->ended_at = now()->toDateTimeString();
-            $conversation->end_reason = 'resolved';
+            $conversation->end_reason = $turn->endReason ?? 'resolved';
 
             return;
         }

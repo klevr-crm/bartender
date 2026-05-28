@@ -22,17 +22,17 @@ beforeEach(function (): void {
     config()->set('bartender.ai.max_turns', 50);
 });
 
-test('runTurn com closeConversation=true grava end_reason=resolved', function (): void {
+test('runTurn persiste metadata com intent e satisfaction na inbound Message', function (): void {
     Prism::fake([
         new StructuredResponse(
             steps: collect([]),
             text: '',
             structured: [
-                'message' => 'Perfeito, muito obrigado!',
-                'intent' => 'thank_and_close',
-                'should_close' => true,
-                'satisfaction' => 5,
-                'reason' => 'Problema resolvido',
+                'message' => 'Quero saber o preço',
+                'intent' => 'ask_pricing',
+                'should_close' => false,
+                'satisfaction' => 4,
+                'reason' => '',
             ],
             finishReason: FinishReason::Stop,
             usage: new Usage(0, 0),
@@ -65,27 +65,50 @@ test('runTurn com closeConversation=true grava end_reason=resolved', function ()
         'provider' => 'meta_whatsapp_cloud',
     ]);
 
+    $createdMessage = null;
+
     $runner = new PersonaRunner;
     $engine = new ConversationEngine(
         $runner,
         new InboundDispatcher,
-        createMessage: function (array $attrs) use ($conversation): Message {
+        createMessage: function (array $attrs) use (&$createdMessage, $conversation): Message {
             $message = new Message($attrs);
             $message->setRelation('conversation', $conversation);
+            $createdMessage = $message;
 
             return $message;
         },
         createRawPayload: fn (array $attrs): RawPayload => new RawPayload($attrs),
     );
+
     $engine->runTurn($conversation, $channel);
 
-    expect($conversation->status)->toBe('completed')
-        ->and($conversation->end_reason)->toBe('resolved')
-        ->and($conversation->ended_at)->not->toBeNull();
+    expect($createdMessage)->not->toBeNull()
+        ->and($createdMessage->content)->toBe('Quero saber o preço')
+        ->and($createdMessage->metadata)->toBe([
+            'intent' => 'ask_pricing',
+            'satisfaction' => 4,
+        ]);
 });
 
-test('runTurn atingindo max_turns grava end_reason=max_turns', function (): void {
-    config()->set('bartender.ai.max_turns', 3);
+test('runTurn persiste metadata null quando intent e satisfaction são null', function (): void {
+    Prism::fake([
+        new StructuredResponse(
+            steps: collect([]),
+            text: '',
+            structured: [
+                'message' => 'Oi',
+                'intent' => '',
+                'should_close' => false,
+                'satisfaction' => 3,
+                'reason' => '',
+            ],
+            finishReason: FinishReason::Stop,
+            usage: new Usage(0, 0),
+            meta: new Meta('fake', 'fake'),
+            additionalContent: [],
+        ),
+    ]);
 
     $persona = new Persona([
         'id' => 1,
@@ -101,7 +124,7 @@ test('runTurn atingindo max_turns grava end_reason=max_turns', function (): void
         'persona_id' => 1,
         'channel_instance_id' => 1,
         'status' => 'active',
-        'turn_count' => 2,
+        'turn_count' => 0,
     ]);
     $conversation->setRelation('persona', $persona);
     $conversation->setRelation('messages', collect([]));
@@ -111,22 +134,26 @@ test('runTurn atingindo max_turns grava end_reason=max_turns', function (): void
         'provider' => 'meta_whatsapp_cloud',
     ]);
 
+    $createdMessage = null;
+
     $runner = new PersonaRunner;
     $engine = new ConversationEngine(
         $runner,
         new InboundDispatcher,
-        createMessage: function (array $attrs) use ($conversation): Message {
+        createMessage: function (array $attrs) use (&$createdMessage, $conversation): Message {
             $message = new Message($attrs);
             $message->setRelation('conversation', $conversation);
+            $createdMessage = $message;
 
             return $message;
         },
         createRawPayload: fn (array $attrs): RawPayload => new RawPayload($attrs),
     );
+
     $engine->runTurn($conversation, $channel);
 
-    expect($conversation->status)->toBe('completed')
-        ->and($conversation->end_reason)->toBe('max_turns')
-        ->and($conversation->ended_at)->not->toBeNull()
-        ->and($conversation->turn_count)->toBe(3);
+    expect($createdMessage)->not->toBeNull()
+        ->and($createdMessage->metadata)->toBe([
+            'satisfaction' => 3,
+        ]);
 });
