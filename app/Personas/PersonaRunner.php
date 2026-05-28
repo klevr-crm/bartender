@@ -67,11 +67,19 @@ final class PersonaRunner
      */
     private function buildHistory(Conversation $conversation): array
     {
-        $messages = $conversation->messages()
-            ->whereIn('role', ['user', 'assistant'])
-            ->orderBy('created_at')
-            ->take(20)
-            ->get();
+        if ($conversation->relationLoaded('messages')) {
+            $messages = $conversation->getRelation('messages')
+                ->whereIn('role', ['user', 'assistant'])
+                ->sortBy('created_at')
+                ->take(20)
+                ->values();
+        } else {
+            $messages = $conversation->messages()
+                ->whereIn('role', ['user', 'assistant'])
+                ->orderBy('created_at')
+                ->take(20)
+                ->get();
+        }
 
         return $messages->map(function ($msg): UserMessage|AssistantMessage {
             if ($msg->role === 'user') {

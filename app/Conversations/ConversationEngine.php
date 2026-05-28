@@ -16,13 +16,30 @@ use App\Simulators\Evolution\EvolutionWhatsappSimulator;
 use App\Simulators\Meta\InstagramDirectSimulator;
 use App\Simulators\Meta\MessengerSimulator;
 use App\Simulators\Meta\WhatsappCloudSimulator;
+use Closure;
 
 final class ConversationEngine
 {
+    /** @var Closure(array<string, mixed>): Message */
+    private readonly Closure $createMessage;
+
+    /** @var Closure(array<string, mixed>): RawPayload */
+    private readonly Closure $createRawPayload;
+
     public function __construct(
         private readonly PersonaRunner $personaRunner,
         private readonly InboundDispatcher $dispatcher,
-    ) {}
+        ?Closure $createMessage = null,
+        ?Closure $createRawPayload = null,
+    ) {
+        $this->createMessage = $createMessage ?? function (array $attributes): Message {
+            $message = new Message($attributes);
+            $message->save();
+
+            return $message;
+        };
+        $this->createRawPayload = $createRawPayload ?? fn (array $attributes): RawPayload => RawPayload::create($attributes);
+    }
 
     public function start(Scenario $scenario, ChannelInstance $channel): Conversation
     {
@@ -54,7 +71,7 @@ final class ConversationEngine
 
         $turn = $this->personaRunner->nextTurn($conversation);
 
-        $message = new Message([
+        ($this->createMessage)([
             'conversation_id' => $conversation->id,
             'direction' => 'inbound',
             'role' => 'user',
@@ -63,23 +80,41 @@ final class ConversationEngine
             'status' => 'sent',
             'sent_at' => now(),
         ]);
-        $message->save();
 
-        $payload = $simulator->buildInboundPayload($message, $channel);
+        $inboundMessage = new Message([
+            'conversation_id' => $conversation->id,
+            'direction' => 'inbound',
+            'role' => 'user',
+            'content' => $turn->text,
+        ]);
+        $inboundMessage->setRelation('conversation', $conversation);
+        $payload = $simulator->buildInboundPayload($inboundMessage, $channel);
         $this->dispatcher->send($payload, $channel, $this->webhookPath($channel));
 
-        RawPayload::create([
+        ($this->createRawPayload)([
             'conversation_id' => $conversation->id,
             'direction' => 'inbound',
             'channel' => $simulator->provider(),
             'payload' => $payload,
         ]);
 
-        $conversation->increment('turn_count');
-        $channel->update(['last_post_at' => now()]);
+        $conversation->turn_count++;
+        $channel->last_post_at = now()->toDateTimeString();
 
         if ($turn->closeConversation) {
-            $conversation->update(['status' => 'completed', 'ended_at' => now()]);
+            $conversation->status = 'completed';
+            $conversation->ended_at = now()->toDateTimeString();
+            $conversation->end_reason = 'resolved';
+
+            return;
+        }
+
+        $maxTurns = (int) config('bartender.ai.max_turns', 50);
+
+        if ($conversation->turn_count >= $maxTurns) {
+            $conversation->status = 'completed';
+            $conversation->ended_at = now()->toDateTimeString();
+            $conversation->end_reason = 'max_turns';
         }
     }
 
@@ -94,7 +129,7 @@ final class ConversationEngine
         $deliveryPayload = $simulator->buildDeliveryReceipt($outboundMessage, $channel);
         $this->dispatcher->send($deliveryPayload, $channel, $this->webhookPath($channel));
 
-        RawPayload::create([
+        ($this->createRawPayload)([
             'conversation_id' => $conversation->id,
             'direction' => 'outbound',
             'channel' => $simulator->provider(),
@@ -104,7 +139,7 @@ final class ConversationEngine
         $readPayload = $simulator->buildReadReceipt($outboundMessage, $channel);
         $this->dispatcher->send($readPayload, $channel, $this->webhookPath($channel));
 
-        RawPayload::create([
+        ($this->createRawPayload)([
             'conversation_id' => $conversation->id,
             'direction' => 'outbound',
             'channel' => $simulator->provider(),

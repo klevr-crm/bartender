@@ -4,11 +4,18 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\PersonaFactory;
+use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+#[UseFactory(PersonaFactory::class)]
 final class Persona extends Model
 {
+    /** @use HasFactory<PersonaFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'slug',
         'name',

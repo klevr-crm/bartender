@@ -4,15 +4,22 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\ConversationFactory;
+use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Prism\Prism\ValueObjects\Messages\AssistantMessage;
 use Prism\Prism\ValueObjects\Messages\UserMessage;
 
+#[UseFactory(ConversationFactory::class)]
 final class Conversation extends Model
 {
+    /** @use HasFactory<ConversationFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'scenario_id',
         'persona_id',
@@ -23,6 +30,7 @@ final class Conversation extends Model
         'started_at',
         'ended_at',
         'error',
+        'end_reason',
     ];
 
     protected function casts(): array
