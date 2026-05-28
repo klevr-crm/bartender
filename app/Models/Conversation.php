@@ -11,9 +11,25 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Prism\Prism\ValueObjects\Messages\AssistantMessage;
 use Prism\Prism\ValueObjects\Messages\UserMessage;
 
+/**
+ * @property int $id
+ * @property int|null $scenario_id
+ * @property int|null $persona_id
+ * @property int|null $channel_instance_id
+ * @property string|null $external_conversation_id
+ * @property string $status
+ * @property int $turn_count
+ * @property Carbon|null $started_at
+ * @property Carbon|null $ended_at
+ * @property string|null $error
+ * @property string|null $end_reason
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ */
 #[UseFactory(ConversationFactory::class)]
 final class Conversation extends Model
 {

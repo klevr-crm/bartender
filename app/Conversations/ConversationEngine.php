@@ -112,7 +112,7 @@ final class ConversationEngine
 
         if ($turn->closeConversation) {
             $conversation->status = 'completed';
-            $conversation->ended_at = now()->toDateTimeString();
+            $conversation->ended_at = now();
             $conversation->end_reason = $turn->endReason ?? 'resolved';
 
             return;
@@ -122,7 +122,7 @@ final class ConversationEngine
 
         if ($conversation->turn_count >= $maxTurns) {
             $conversation->status = 'completed';
-            $conversation->ended_at = now()->toDateTimeString();
+            $conversation->ended_at = now();
             $conversation->end_reason = 'max_turns';
         }
     }
