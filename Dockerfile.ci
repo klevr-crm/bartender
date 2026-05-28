@@ -1,0 +1,37 @@
+FROM php:8.4-cli-alpine
+
+# Install system dependencies and PHP extensions
+RUN apk add --no-cache \
+    postgresql-dev \
+    mysql-dev \
+    sqlite-dev \
+    libzip-dev \
+    unzip \
+    git \
+    linux-headers \
+    $PHPIZE_DEPS \
+    && docker-php-ext-install \
+    pdo \
+    pdo_pgsql \
+    pdo_mysql \
+    pdo_sqlite \
+    pcntl \
+    sockets \
+    zip \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del $PHPIZE_DEPS
+
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /app
+
+# Copy project files
+COPY . .
+
+# Install dependencies (including dev for tests)
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+
+# Run the full CI validation suite
+CMD ["sh", "-c", "./vendor/bin/pest && ./vendor/bin/phpstan analyse --level=6 && ./vendor/bin/pint --test"]
