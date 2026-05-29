@@ -12,7 +12,7 @@ final class ConversationController extends Controller
 {
     public function show(Conversation $conversation): JsonResponse
     {
-        $conversation->load(['messages', 'rawPayloads', 'scenario', 'persona', 'channelInstance']);
+        $conversation->load(['messages', 'rawPayloads', 'scenario', 'persona', 'channelInstance', 'evaluation']);
 
         $turns = $conversation->messages->map(function ($message) {
             return [
@@ -29,6 +29,15 @@ final class ConversationController extends Controller
             ];
         });
 
+        $evaluationModel = $conversation->evaluation;
+        $evaluation = $evaluationModel === null ? null : [
+            'verdict' => $evaluationModel->verdict,
+            'overall_score' => $evaluationModel->overall_score,
+            'scores' => $evaluationModel->scores,
+            'findings' => $evaluationModel->findings,
+            'judged_at' => $evaluationModel->judged_at?->toIso8601String(),
+        ];
+
         return response()->json([
             'id' => $conversation->id,
             'scenario_id' => $conversation->scenario_id,
@@ -39,6 +48,7 @@ final class ConversationController extends Controller
             'ended_at' => $conversation->ended_at?->toIso8601String(),
             'error' => $conversation->error,
             'turns' => $turns,
+            'evaluation' => $evaluation,
         ]);
     }
 }
