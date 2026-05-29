@@ -23,4 +23,4 @@ RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache
 
 EXPOSE 8088
 
-CMD ["php", "-S", "0.0.0.0:8088", "-t", "public"]
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8088"]

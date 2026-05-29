@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace App\Outbound;
 
-use App\Conversations\ConversationEngine;
 use App\Models\Conversation;
-use App\Models\Message;
-use App\Models\RawPayload;
 use App\Simulators\Contracts\ChannelSimulator;
 use App\Simulators\Evolution\EvolutionWhatsappSimulator;
 use App\Simulators\Meta\InstagramDirectSimulator;
@@ -104,29 +101,8 @@ final class ChannelOutboundConsumer extends Command
             return;
         }
 
-        $message = new Message([
-            'conversation_id' => $conversation->id,
-            'direction' => 'outbound',
-            'role' => 'assistant',
-            'content' => $normalized->content,
-            'media' => $normalized->media,
-            'external_message_id' => $normalized->externalMessageId,
-            'status' => 'delivered',
-            'delivered_at' => now(),
-        ]);
-        $message->save();
-
-        RawPayload::create([
-            'conversation_id' => $conversation->id,
-            'direction' => 'outbound',
-            'channel' => $simulator->provider(),
-            'payload' => $data,
-        ]);
-
-        if ($conversation->channelInstance !== null) {
-            $engine = app(ConversationEngine::class);
-            $engine->sendAck($conversation, $conversation->channelInstance, $message);
-        }
+        $handler = app(OutboundResponseHandler::class);
+        $handler->handle($conversation, $normalized, $simulator);
     }
 
     private function resolveSimulator(string $provider): ?ChannelSimulator

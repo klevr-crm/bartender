@@ -4,15 +4,38 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\ConversationFactory;
+use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Prism\Prism\ValueObjects\Messages\AssistantMessage;
 use Prism\Prism\ValueObjects\Messages\UserMessage;
 
+/**
+ * @property int $id
+ * @property int|null $scenario_id
+ * @property int|null $persona_id
+ * @property int|null $channel_instance_id
+ * @property string|null $external_conversation_id
+ * @property string $status
+ * @property int $turn_count
+ * @property Carbon|null $started_at
+ * @property Carbon|null $ended_at
+ * @property string|null $error
+ * @property string|null $end_reason
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ */
+#[UseFactory(ConversationFactory::class)]
 final class Conversation extends Model
 {
+    /** @use HasFactory<ConversationFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'scenario_id',
         'persona_id',
@@ -23,6 +46,7 @@ final class Conversation extends Model
         'started_at',
         'ended_at',
         'error',
+        'end_reason',
     ];
 
     protected function casts(): array
@@ -62,6 +86,12 @@ final class Conversation extends Model
     public function rawPayloads(): HasMany
     {
         return $this->hasMany(RawPayload::class);
+    }
+
+    /** @return HasMany<ConversationEvaluation, $this> */
+    public function evaluations(): HasMany
+    {
+        return $this->hasMany(ConversationEvaluation::class);
     }
 
     /**

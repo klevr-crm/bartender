@@ -33,5 +33,8 @@ COPY . .
 # Install dependencies (including dev for tests)
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
+# Prepare environment for tests (APP_KEY required for view/encryption)
+RUN cp .env.example .env && php artisan key:generate --ansi
+
 # Run the full CI validation suite
-CMD ["sh", "-c", "./vendor/bin/pest && ./vendor/bin/phpstan analyse --level=6 && ./vendor/bin/pint --test"]
+CMD ["sh", "-c", "./vendor/bin/pest && ./vendor/bin/phpstan analyse --level=6 --memory-limit=512M && ./vendor/bin/pint --test"]
