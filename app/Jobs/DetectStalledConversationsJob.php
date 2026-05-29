@@ -48,6 +48,8 @@ final class DetectStalledConversationsJob implements ShouldQueue
                 'error' => 'CRM inactivity timeout',
             ]);
 
+            JudgeConversationJob::dispatch($conversation->id);
+
             Log::warning('Conversation stalled (CRM inactivity)', ['conversation_id' => $conversation->id]);
         }
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Conversations;
 
 use App\Inbound\InboundDispatcher;
+use App\Jobs\JudgeConversationJob;
 use App\Models\ChannelInstance;
 use App\Models\Conversation;
 use App\Models\Message;
@@ -114,6 +115,8 @@ final class ConversationEngine
             $conversation->status = 'completed';
             $conversation->ended_at = now();
             $conversation->end_reason = $turn->endReason ?? 'resolved';
+            $conversation->save();
+            JudgeConversationJob::dispatch($conversation->id);
 
             return;
         }
@@ -124,6 +127,8 @@ final class ConversationEngine
             $conversation->status = 'completed';
             $conversation->ended_at = now();
             $conversation->end_reason = 'max_turns';
+            $conversation->save();
+            JudgeConversationJob::dispatch($conversation->id);
         }
     }
 

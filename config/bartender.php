@@ -33,6 +33,13 @@ return [
         'max_conversations_per_day' => (int) env('BARTENDER_AI_MAX_CONVERSATIONS_PER_DAY', 100),
     ],
 
+    'judge' => [
+        'enabled' => (bool) env('BARTENDER_JUDGE_ENABLED', true),
+        'provider' => env('BARTENDER_JUDGE_PROVIDER', env('BARTENDER_AI_PROVIDER', 'openai')),
+        'model' => env('BARTENDER_JUDGE_MODEL', env('BARTENDER_AI_MODEL', 'gpt-4o-mini')),
+        'max_tokens' => (int) env('BARTENDER_JUDGE_MAX_TOKENS', 800),
+    ],
+
     'timing' => [
         'mode' => env('BARTENDER_TIMING_MODE', 'realistic'), // realistic | fast
         'realistic' => [

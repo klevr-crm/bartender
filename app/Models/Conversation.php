@@ -88,6 +88,12 @@ final class Conversation extends Model
         return $this->hasMany(RawPayload::class);
     }
 
+    /** @return HasMany<ConversationEvaluation, $this> */
+    public function evaluations(): HasMany
+    {
+        return $this->hasMany(ConversationEvaluation::class);
+    }
+
     /**
      * @return array<int, UserMessage|AssistantMessage>
      */
