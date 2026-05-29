@@ -137,8 +137,11 @@ final class PersonaRunner
         $history = $this->buildHistory($conversation);
         $systemPrompt = $this->buildSystemPrompt($conversation, $persona);
 
+        $fallbackProvider = (string) config('bartender.ai.fallback_provider', 'anthropic');
+        $fallbackModel = (string) config('bartender.ai.fallback_model', $persona->model);
+
         $response = Prism::text()
-            ->using(Provider::from($persona->provider), $persona->model)
+            ->using(Provider::from($fallbackProvider), $fallbackModel)
             ->withSystemPrompt($systemPrompt)
             ->withMessages($history)
             ->withMaxTokens(config('bartender.ai.max_tokens', 400))

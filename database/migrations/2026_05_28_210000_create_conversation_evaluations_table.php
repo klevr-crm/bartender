@@ -12,7 +12,7 @@ return new class extends Migration
     {
         Schema::create('conversation_evaluations', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('conversation_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('conversation_id')->unique()->constrained()->cascadeOnDelete();
             $table->json('scores');
             $table->unsignedTinyInteger('overall_score')->nullable();
             $table->json('findings');

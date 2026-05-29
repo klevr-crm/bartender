@@ -9,9 +9,11 @@ use App\Models\Conversation;
 use App\Models\ConversationEvaluation;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 final class JudgeConversationJob implements ShouldQueue
 {
@@ -42,6 +44,13 @@ final class JudgeConversationJob implements ShouldQueue
             return;
         }
 
-        $judge->judge($conversation);
+        try {
+            $judge->judge($conversation);
+        } catch (QueryException $e) {
+            // Evaluation já criada por execução concorrente (violação de unique) — no-op idempotente.
+            Log::info('JudgeConversationJob: evaluation já existe (corrida resolvida)', [
+                'conversation_id' => $conversation->id,
+            ]);
+        }
     }
 }
