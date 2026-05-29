@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 use Prism\Prism\ValueObjects\Messages\AssistantMessage;
 use Prism\Prism\ValueObjects\Messages\UserMessage;
@@ -92,6 +93,12 @@ final class Conversation extends Model
     public function evaluations(): HasMany
     {
         return $this->hasMany(ConversationEvaluation::class);
+    }
+
+    /** @return HasOne<ConversationEvaluation, $this> */
+    public function evaluation(): HasOne
+    {
+        return $this->hasOne(ConversationEvaluation::class);
     }
 
     /**
