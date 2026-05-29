@@ -55,4 +55,14 @@ return [
         ],
         'inactivity_timeout_ms' => (int) env('BARTENDER_INACTIVITY_TIMEOUT_MS', 120_000),
     ],
+
+    'fake_meta' => [
+        'enabled' => (bool) env('BARTENDER_FAKE_META_ENABLED', false),
+        'business_id' => env('BARTENDER_FAKE_META_BUSINESS_ID', 'business_123'),
+        'waba_id' => env('BARTENDER_FAKE_META_WABA_ID', 'waba_123'),
+        'phone_number_id' => env('BARTENDER_FAKE_META_PHONE_ID', '1234567890'),
+        'display_phone_number' => env('BARTENDER_FAKE_META_DISPLAY_PHONE', '+55 11 99999-9999'),
+        'verified_name' => env('BARTENDER_FAKE_META_VERIFIED_NAME', 'Bartender'),
+        'access_token' => env('BARTENDER_FAKE_META_ACCESS_TOKEN', 'fake-access-token'),
+    ],
 ];
